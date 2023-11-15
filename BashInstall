@@ -1,0 +1,21 @@
+#!/bin/bash
+
+PYTHON_SCRIPT_PATH="/path/to/file_monitor.py"
+
+# Create a systemd service file
+echo "[Unit]
+Description=File Monitor Service
+
+[Service]
+ExecStart=/usr/bin/python3 $PYTHON_SCRIPT_PATH
+Restart=always
+
+[Install]
+WantedBy=multi-user.target" > /etc/systemd/system/filemonitor.service
+
+# Reload the systemd manager configuration
+systemctl daemon-reload
+
+# Enable and start the service
+systemctl enable filemonitor.service
+systemctl start filemonitor.service
