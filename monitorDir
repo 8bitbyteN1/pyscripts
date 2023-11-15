@@ -1,0 +1,47 @@
+#monitor directory
+
+import os
+import re
+import sys
+import time
+import fcntl
+
+# Developer-supplied variables
+MONITOR_DIR = "/path/to/directory"  # Directory to monitor
+FILE_FRAGMENT = "file_fragment"     # Fragment of the filename to look for
+REGEX_PATTERN = r"your_regex"       # Regex pattern to search within files
+OUTPUT_PREFIX = "output_"           # Prefix for the output files
+
+# Ensuring single instance of the script
+lockfile = "/tmp/file_monitor.lock"
+with open(lockfile, 'w') as lf:
+    try:
+        fcntl.flock(lf, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except IOError:
+        print("Another instance of the script is running.")
+        sys.exit(0)
+
+# Monitoring and processing files
+def process_file(file_path, output_file):
+    with open(file_path, 'r') as file:
+        content = file.read()
+    matches = re.findall(REGEX_PATTERN, content)
+    with open(output_file, 'a') as out:
+        out.write('\n'.join(matches))
+
+def main():
+    output_index = 0
+    while True:
+        for filename in os.listdir(MONITOR_DIR):
+            if FILE_FRAGMENT in filename:
+                output_file = f"{OUTPUT_PREFIX}{output_index}.txt"
+                process_file(os.path.join(MONITOR_DIR, filename), output_file)
+                output_index += 1
+        time.sleep(30)
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
